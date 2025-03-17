@@ -122,7 +122,7 @@ string format_options(vector<tuple<string, string, string, string>> options) {
 	return result;
 }
 
-int getch() {
+int getch(struct termios *old) {
 	char ch;
 	struct termios oldattr;
 	struct termios newattr;
@@ -135,7 +135,7 @@ int getch() {
 	newattr.c_cc[VTIME] = 0;
 	tcsetattr(STDIN_FILENO, TCSANOW, &newattr);
 	ch = getchar();
-	tcsetattr(STDIN_FILENO, TCSANOW, &oldattr);
+	*old = oldattr;
 
 	return ch;
 }
@@ -249,7 +249,8 @@ int main() {
 	std::cout << center_y(screen, w.ws_row, true);
 	std::cout << "\033[0m";
 
-	char p = getch();
+	struct termios oldterm;
+	char p = getch(&oldterm);
 	string c_inp;
 	if (p != prefix) {
 		quit(p);
@@ -261,10 +262,12 @@ int main() {
 				colorize(center_x(format_options(options), w.ws_col), WHITE));
 	std::cout << center_y(screen, w.ws_row, true);
 
+	std::cout << ":";
+	string i;
 	while (true) {
-		std::cout << ":";
-		string i;
-		cin >> i;
+		char c = getc(stdin);
+		putc(c, stdout);
+		i.append(1, c);
 
 		if (i == "h") {
 			clear_screen();
@@ -278,7 +281,7 @@ int main() {
 				"\033[31mQuit with\033[0m \t\t\t:q\n";
 			std::cout << center_y(center_x(msg, w.ws_col), w.ws_row, true);
 		} else if (i == "q") {
-			quit(0);
+			break;
 		} else if (i == "main") {
 			std::cout << "\033[33m";
 			std::cout << center_y(screen, w.ws_row, true);
@@ -290,7 +293,7 @@ int main() {
 					int ret = std::system("clear");
 					if (ret == -1) {
 						std::cerr << "Error: clear command failed!\n";
-						exit(1);
+						break;
 					}
 					string v = get<3>(el);
 					std::vector<string> argv = split(v, ' ');
@@ -305,4 +308,6 @@ int main() {
 			}
 		}
 	}
+
+	tcsetattr(STDIN_FILENO, TCSANOW, &oldterm);
 }
