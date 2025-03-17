@@ -253,6 +253,7 @@ int main() {
 	char p = getch(&oldterm);
 	string c_inp;
 	if (p != prefix) {
+		tcsetattr(STDIN_FILENO, TCSANOW, &oldterm);
 		quit(p);
 	}
 
@@ -308,6 +309,5 @@ int main() {
 			}
 		}
 	}
-
 	tcsetattr(STDIN_FILENO, TCSANOW, &oldterm);
 }
