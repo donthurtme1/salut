@@ -304,6 +304,7 @@ int main() {
 						fitting.push_back(non_const);
 					}
 					fitting.push_back(nullptr);
+					tcsetattr(STDIN_FILENO, TCSANOW, &oldterm);
 					execvp(argv[0].c_str(), fitting.data());
 				}
 			}
